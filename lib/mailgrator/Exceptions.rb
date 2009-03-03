@@ -23,10 +23,26 @@ module MailGrator
         end
     end
 
+    class UnknownMboxFile < GratorException
+        attr_reader :mailbox
+        def initialize(m)
+            @mailbox = m
+        end
+    end
+
     class UnknownMailbox < GratorException
         attr_reader :mailbox
         def initialize(m)
             @mailbox = m
+        end
+    end
+
+    class InvalidType < GratorException
+        attr_reader :expected
+        attr_reader :provided
+        def initialize(expected, provided)
+            @expected = expected
+            @provided = provided
         end
     end
 end
