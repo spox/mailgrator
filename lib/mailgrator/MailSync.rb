@@ -1,5 +1,7 @@
 module MailGator
     class MailSync
+        # max_threads:: max number of threads to create
+        # Creates new MailSync
         def initialize(max_threads=10)
             @src_account = nil
             @dest_account = nil
@@ -12,16 +14,21 @@ module MailGator
             @initial_size = 0
         end
 
+        # account:: MailAccount
+        # set the source mail account
         def set_src_account(account)
             raise InvalidType.new(MailAccount, account.class) unless account.is_a?(MailAccount)
             @src_account = account
         end
 
+        # account:: MailAccount
+        # set the destination mail account
         def set_dest_account(account)
             raise InvalidType.new(MailAccount, account.class) unless account.is_a?(MailAccount)
             @dest_account = account
         end
 
+        # synchronize mail from source to destination account
         def sync_mail
             raise EmptyAccounts.new(@src_account, @dest_account) if @src_account.nil? || @dest_account.nil?
             @threads = Array.new
@@ -41,6 +48,7 @@ module MailGator
             wait_for_completion
         end
 
+        # return percentage of tasks completed
         def progress
             return @proc_queue.size / @initial_size.to_f
         end
