@@ -66,4 +66,19 @@ module MailGrator
             @mailbox = m
         end
     end
+
+    class EmptyAccounts < GratorException
+        def initialize(s,d)
+            @src = s.nil?
+            @dest = d.nil?
+        end
+
+        def source_emtpy?
+            @src
+        end
+
+        def dest_empty?
+            @dest
+        end
+    end
 end
