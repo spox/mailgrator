@@ -52,4 +52,11 @@ module MailGrator
             @message_id = m_id
         end
     end
+
+    class MailboxCreationFailure < GratorException
+        attr_reader :boxes
+        def initialize(b)
+            @boxes = b
+        end
+    end
 end
