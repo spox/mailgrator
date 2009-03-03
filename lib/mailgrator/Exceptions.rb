@@ -59,4 +59,11 @@ module MailGrator
             @boxes = b
         end
     end
+
+    class ReadOnlyMailbox < GratorException
+        attr_reader :mailbox
+        def initialize(m)
+            @mailbox = m
+        end
+    end
 end
