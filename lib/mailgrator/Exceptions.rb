@@ -45,4 +45,11 @@ module MailGrator
             @provided = provided
         end
     end
+
+    class InvalidMessageID < GratorException
+        attr_reader :message_id
+        def initialize(m_id)
+            @message_id = m_id
+        end
+    end
 end
