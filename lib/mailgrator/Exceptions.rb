@@ -22,4 +22,11 @@ module MailGrator
             @name = name
         end
     end
+
+    class UnknownMailbox < GratorException
+        attr_reader :mailbox
+        def initialize(m)
+            @mailbox = m
+        end
+    end
 end
