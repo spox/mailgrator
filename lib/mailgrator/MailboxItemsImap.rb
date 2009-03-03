@@ -37,6 +37,8 @@ module MailGator
             return fetch_message_seqno(@message_ids.index(id))
         end
 
+        # num:: index message is located at
+        # Fetch message at given index
         def fetch_message_seqno(num)
             return @connection.imap.fetch(num, 'BODY')
         end
