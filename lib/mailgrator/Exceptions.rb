@@ -88,4 +88,13 @@ module MailGrator
             @mail_exception = e
         end
     end
+
+    class InvalidMigration < GratorException
+        attr_reader :to_type
+        attr_reader :from_type
+        def initialize(t,f)
+            @to_type = t
+            @from_type = f
+        end
+    end
 end
