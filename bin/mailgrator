@@ -1,0 +1,91 @@
+#!/usr/bin/env ruby
+
+['rubygems', 'getoptlong'].each{|f|require f}
+
+$GRATORVERSION = '0.0.1'
+$GRATORCODENAME = 'blue'
+
+def help
+    "this should be helpful stuff"
+end
+
+def version
+    "MailGrator (Email migration tool) - Version: #{$GRATORVERSION} Codename: #{$GRATORCODENAME}"
+end
+
+begin
+    require 'fastthread'
+rescue Object
+    # ignore if not found #
+end
+
+begin
+    require 'mailgrator/MailGrator'
+rescue Object
+    puts 'ERROR: Failed to load MailGrator'
+    exit 1
+end
+
+opts = GetoptLong.new(
+    ['--help', '-h', GetoptLong::NO_ARGUMENT],
+    ['--interactive', '-i', GetoptLong::NO_ARGUMENT],
+    ['--source_host', '-sh', GetoptLong::REQUIRED_ARGUMENT],
+    ['--source_port', '-so', GetoptLong::REQUIRED_ARGUMENT],
+    ['--source_username', '-su', GetoptLong::REQUIRED_ARGUMENT],
+    ['--source_password', '-sp', GetoptLong::REQUIRED_ARGUMENT],
+    ['--dest_host', '-dh', GetoptLong::REQUIRED_ARGUMENT],
+    ['--dest_port', '-do', GetoptLong::REQUIRED_ARGUMENT],
+    ['--dest_username', '-du', GetoptLong::REQUIRED_ARGUMENT],
+    ['--dest_password', '-dp', GetoptLong::REQUIRED_ARGUMENT],
+    ['--debug', '-d', GetoptLong::OPTIONAL_ARGUMENT],
+    ['--verbosity', '-V', GetoptLong::OPTIONAL_ARGUMENT],
+    ['--version', '-v', GetoptLong::NO_ARGUMENT]
+)
+verbose = 0
+logto = nil
+loglevel = :fatal
+interactive = false
+source = {:user => nil, :pass => nil, :host => nil, :port => nil}
+dest = {:user => nil, :pass => nil, :host => nil, :port => nil}
+
+opts.each do |opt,arg|
+    case opt
+        when '--help'
+            puts help
+            exit
+        when '--version'
+            puts version
+            exit
+        when '--interactive'
+            interactive = true
+        when '--source_host'
+            source[:host] = arg
+        when '--source_port'
+            source[:port] = arg
+        when '--source_username'
+            source[:user] = arg
+        when '--source_password'
+            source[:pass] = arg
+        when '--dest_host'
+            dest[:host] = arg
+        when '--dest_port'
+            dest[:port] = arg
+        when '--dest_username'
+            dest[:user] = arg
+        when '--dest_password'
+            dest[:pass] = arg
+        when '--verbosity'
+            loglevel = arg.to_sym
+            unless([:fatal, :warn, :info].include?(loglevel))
+                puts 'ERROR: Invalid verbosity. Allowed are: fatal, warn, info'
+                exit 1
+            end
+        when '--debug'
+            logto = (arg.nil? || arg.empty?) ? $stdout : arg
+    end
+end
+
+MailGrator::Logger.initialize(logto, loglevel)
+
+grator = MailGrator::MailGrator.new(source, dest, interactive)
+grator.start
