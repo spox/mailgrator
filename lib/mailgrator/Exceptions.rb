@@ -81,4 +81,11 @@ module MailGrator
             @dest
         end
     end
+
+    class ConnectionFailed < GratorException
+        attr_reader :mail_exception
+        def initialize(e)
+            @mail_exception = e
+        end
+    end
 end
