@@ -1,3 +1,4 @@
+['Exceptions', 'net/imap'].each{|f| require "mailgrator/#{f}"}
 module MailGrator
     class MailConnection
         # server::  IMAP hostname

@@ -1,3 +1,4 @@
+['Exceptions'].each{|f| require "mailgrator/#{f}"}
 module MailGrator
     class MailboxItemsMbox
         # path:: path to mbox

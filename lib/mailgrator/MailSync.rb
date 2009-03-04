@@ -1,3 +1,5 @@
+['MailAccount', 'Exceptions', 'thread'].each{|f|require "mailgrator/#{f}"}
+
 module MailGrator
     class MailSync
         # max_threads:: max number of threads to create

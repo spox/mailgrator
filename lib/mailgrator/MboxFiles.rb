@@ -1,3 +1,4 @@
+['Exceptions'].each{|f| require "mailgrator/#{f}"}
 module MailGrator
     class MboxFiles
         def initialize
@@ -19,7 +20,7 @@ module MailGrator
 
         # name:: name of file to read next message from (full path)
         # uploaded_ids:: message-ids of already read messages
-        # strip_emailchemy:: Strips header added by email alchemy converter
+        # strip_emailchemy:: Strips header added by emailchemy converter
         # Reads next message from mbox file. Will raise duplicate
         # message error if message-id is found in uploaded_ids
         def read_message(name, uploaded_ids, strip_emailchemy=false)
