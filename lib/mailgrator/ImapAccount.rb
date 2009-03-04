@@ -1,4 +1,4 @@
-['MailAccount', 'MailboxListImap', 'MailConnection'].each{|f| require "mailgrator/#{f}"}
+['MailAccount', 'MailboxListImap', 'MailConnection', 'Logger'].each{|f| require "mailgrator/#{f}"}
 
 module MailGrator
 

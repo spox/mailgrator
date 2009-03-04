@@ -1,4 +1,4 @@
-['Exceptions', 'MailConnection', 'MailboxItemsImap'].each{|f| require "mailgrator/#{f}"}
+['Exceptions', 'MailConnection', 'MailboxItemsImap', 'Logger'].each{|f| require "mailgrator/#{f}"}
 module MailGrator
     class MailboxListImap
         # connection:: IMAP MailConnection

@@ -1,4 +1,5 @@
-['MailAccount', 'Exceptions', 'thread'].each{|f|require "mailgrator/#{f}"}
+['MailAccount', 'Exceptions', 'Logger'].each{|f|require "mailgrator/#{f}"}
+require 'thread'
 
 module MailGrator
     class MailSync
