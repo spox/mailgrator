@@ -1,0 +1,12 @@
+== MailGrator ==
+
+This is a mail migration script that I wrote awhile ago to move some mail
+from mbox files created from old Eudora archives by emailchemy to an
+IMAP server. It expanded a bit from that and now works to sync from mbox
+files to IMAP and from IMAP to IMAP. I have found it especially useful on
+boxes with low levels of memory. It is the reason for IMAP to IMAP support
+as imapsync would continually error out with out of memory messages.
+
+Currently, this isn't finished yet. I'm porting from it's old monolithic
+script into an actual installable package, which should hopefully be done
+soon. 
