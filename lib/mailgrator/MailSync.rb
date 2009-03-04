@@ -19,14 +19,14 @@ module MailGrator
 
         # account:: MailAccount
         # set the source mail account
-        def set_src_account(account)
+        def src_account=(account)
             raise InvalidType.new(MailAccount, account.class) unless account.is_a?(MailAccount)
             @src_account = account
         end
 
         # account:: MailAccount
         # set the destination mail account
-        def set_dest_account(account)
+        def dest_account=(account)
             raise InvalidType.new(MailAccount, account.class) unless account.is_a?(MailAccount)
             @dest_account = account
         end
