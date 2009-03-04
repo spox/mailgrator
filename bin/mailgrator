@@ -29,10 +29,12 @@ end
 opts = GetoptLong.new(
     ['--help', '-h', GetoptLong::NO_ARGUMENT],
     ['--interactive', '-i', GetoptLong::NO_ARGUMENT],
+    ['--source_mbox', '-sm', GetoptLong::REQUIRED_ARGUMENT],
     ['--source_host', '-sh', GetoptLong::REQUIRED_ARGUMENT],
     ['--source_port', '-so', GetoptLong::REQUIRED_ARGUMENT],
     ['--source_username', '-su', GetoptLong::REQUIRED_ARGUMENT],
     ['--source_password', '-sp', GetoptLong::REQUIRED_ARGUMENT],
+    ['--dest_mbox', '-dm', GetoptLong::REQUIRED_ARGUMENT],
     ['--dest_host', '-dh', GetoptLong::REQUIRED_ARGUMENT],
     ['--dest_port', '-do', GetoptLong::REQUIRED_ARGUMENT],
     ['--dest_username', '-du', GetoptLong::REQUIRED_ARGUMENT],
@@ -45,8 +47,8 @@ verbose = 0
 logto = nil
 loglevel = :fatal
 interactive = false
-source = {:user => nil, :pass => nil, :host => nil, :port => nil}
-dest = {:user => nil, :pass => nil, :host => nil, :port => nil}
+source = {:user => nil, :pass => nil, :host => nil, :port => nil, :mbox => nil}
+dest = {:user => nil, :pass => nil, :host => nil, :port => nil, :mbox => nil}
 
 opts.each do |opt,arg|
     case opt
@@ -66,6 +68,8 @@ opts.each do |opt,arg|
             source[:user] = arg
         when '--source_password'
             source[:pass] = arg
+        when '--source_mbox'
+            source[:mbox] = arg
         when '--dest_host'
             dest[:host] = arg
         when '--dest_port'
@@ -74,6 +78,8 @@ opts.each do |opt,arg|
             dest[:user] = arg
         when '--dest_password'
             dest[:pass] = arg
+        when '--dest_mbox'
+            dest[:mbox] = arg
         when '--verbosity'
             loglevel = arg.to_sym
             unless([:fatal, :warn, :info].include?(loglevel))
