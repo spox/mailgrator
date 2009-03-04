@@ -29,16 +29,18 @@ end
 opts = GetoptLong.new(
     ['--help', '-h', GetoptLong::NO_ARGUMENT],
     ['--interactive', '-i', GetoptLong::NO_ARGUMENT],
-    ['--source_mbox', '-sm', GetoptLong::REQUIRED_ARGUMENT],
-    ['--source_host', '-sh', GetoptLong::REQUIRED_ARGUMENT],
-    ['--source_port', '-so', GetoptLong::REQUIRED_ARGUMENT],
-    ['--source_username', '-su', GetoptLong::REQUIRED_ARGUMENT],
-    ['--source_password', '-sp', GetoptLong::REQUIRED_ARGUMENT],
-    ['--dest_mbox', '-dm', GetoptLong::REQUIRED_ARGUMENT],
-    ['--dest_host', '-dh', GetoptLong::REQUIRED_ARGUMENT],
-    ['--dest_port', '-do', GetoptLong::REQUIRED_ARGUMENT],
-    ['--dest_username', '-du', GetoptLong::REQUIRED_ARGUMENT],
-    ['--dest_password', '-dp', GetoptLong::REQUIRED_ARGUMENT],
+    ['--source_mbox', '-o', GetoptLong::REQUIRED_ARGUMENT],
+    ['--source_host', '-p', GetoptLong::REQUIRED_ARGUMENT],
+    ['--source_port', '-q', GetoptLong::REQUIRED_ARGUMENT],
+    ['--source_username', '-r', GetoptLong::REQUIRED_ARGUMENT],
+    ['--source_password', '-s', GetoptLong::REQUIRED_ARGUMENT],
+    ['--dest_mbox', '-j', GetoptLong::REQUIRED_ARGUMENT],
+    ['--dest_host', '-k', GetoptLong::REQUIRED_ARGUMENT],
+    ['--dest_port', '-l', GetoptLong::REQUIRED_ARGUMENT],
+    ['--dest_username', '-m', GetoptLong::REQUIRED_ARGUMENT],
+    ['--dest_password', '-n', GetoptLong::REQUIRED_ARGUMENT],
+    ['--source_secure', '-y', GetoptLong::NO_ARGUMENT],
+    ['--dest_secure', '-z', GetoptLong::NO_ARGUMENT],
     ['--debug', '-d', GetoptLong::OPTIONAL_ARGUMENT],
     ['--verbosity', '-V', GetoptLong::OPTIONAL_ARGUMENT],
     ['--version', '-v', GetoptLong::NO_ARGUMENT]
@@ -47,8 +49,8 @@ verbose = 0
 logto = nil
 loglevel = :fatal
 interactive = false
-source = {:user => nil, :pass => nil, :host => nil, :port => nil, :mbox => nil}
-dest = {:user => nil, :pass => nil, :host => nil, :port => nil, :mbox => nil}
+source = {:user => nil, :pass => nil, :host => nil, :port => nil, :mbox => nil, :secure => false}
+dest = {:user => nil, :pass => nil, :host => nil, :port => nil, :mbox => nil, :secure => false}
 
 opts.each do |opt,arg|
     case opt
@@ -80,6 +82,10 @@ opts.each do |opt,arg|
             dest[:pass] = arg
         when '--dest_mbox'
             dest[:mbox] = arg
+        when '--source_secure'
+            source[:secure] = true
+        when '--dest_secure'
+            dest[:secure] = true
         when '--verbosity'
             loglevel = arg.to_sym
             unless([:fatal, :warn, :info].include?(loglevel))
