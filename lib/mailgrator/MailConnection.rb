@@ -1,4 +1,4 @@
-module MailGator
+module MailGrator
     class MailConnection
         # server::  IMAP hostname
         # user::    IMAP username

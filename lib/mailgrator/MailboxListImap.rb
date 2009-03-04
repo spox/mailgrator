@@ -1,4 +1,4 @@
-module MailGator
+module MailGrator
     class MailboxListImap
         # connection:: IMAP MailConnection
         # Creates new MailboxListImap

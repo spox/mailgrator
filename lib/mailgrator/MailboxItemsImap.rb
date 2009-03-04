@@ -1,4 +1,4 @@
-module MailGator
+module MailGrator
     class MailboxItemsImap
 
         # connection:: MailConnection to IMAP server
