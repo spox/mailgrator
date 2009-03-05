@@ -18,8 +18,6 @@ module MailGrator
             @secure = secure
             if(port.nil?)
                 @port = secure ? 993 : 143
-            else
-                @port = 143
             end
             @lock = Mutex.new
             connect
@@ -90,7 +88,10 @@ module MailGrator
                 Logger.info('Connection to server has been established')
                 authenticate
             rescue Object => boom
-                raise ConnectionFailed.new(boom)
+                unless(boom.is_a?(ConnectionFailed))
+                    boom = ConnectionFailed.new(boom.dup)
+                end
+                raise boom
             end
         end
 
@@ -117,7 +118,7 @@ module MailGrator
                     Logger.warn('Authentication failed using direct login')
                 end
             end
-            raise ConnectionFailed.new(@server, @port) unless @authed
+            raise ConnectionFailed.new("Failed to authenticate") unless @authed
             Logger.info("Successful authentication to: #{@server}:#{@port}")
         end
 

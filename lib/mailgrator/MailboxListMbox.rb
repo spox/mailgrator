@@ -1,4 +1,4 @@
-['MailBoxItemsMbox', 'Exceptions', 'Logger'].each{|f|require "mailgrator/#{f}"}
+['MailboxItemsMbox', 'Exceptions', 'Logger'].each{|f|require "mailgrator/#{f}"}
 
 module MailGrator
     class MailboxListMbox

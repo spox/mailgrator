@@ -1,3 +1,4 @@
+['MailSync', 'MboxAccount', 'ImapAccount', 'Exceptions'].each{|f| require "mailgrator/#{f}"}
 module MailGrator
 
     class MailGrator
@@ -46,12 +47,12 @@ module MailGrator
         end
 
         def setup_accounts
-            if(@dest[:mbox].nil?)
+            unless(@dest[:mbox].nil?)
                 @dest_acct = MboxAccount.new(@dest[:mbox])
             else
                 @dest_acct = ImapAccount.new(@dest[:host], @dest[:user], @dest[:pass], @dest[:port], @dest[:secure])
             end
-            if(@src[:mbox].nil?)
+            unless(@src[:mbox].nil?)
                 @src_acct = MboxAccount.new(@src[:mbox])
             else
                 @src_acct = ImapAccount.new(@src[:host], @src[:user], @src[:pass], @src[:port], @src[:secure])

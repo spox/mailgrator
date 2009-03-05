@@ -69,7 +69,7 @@ module MailGrator
                     Logger.warn("Create mailbox received a no response header: #{boom}")
                 rescue Object => boom
                     failures << box
-                    Logger.warn("Failed to create mailbox #{box}: #{boom}"
+                    Logger.warn("Failed to create mailbox #{box}: #{boom}")
                 end
             end
             raise MailboxCreationFailure.new(failures) if failures.size > 0

@@ -21,8 +21,10 @@ end
 
 begin
     require 'mailgrator/MailGrator'
-rescue Object
-    puts 'ERROR: Failed to load MailGrator'
+    require 'mailgrator/Logger'
+rescue Object => boom
+    puts 'ERROR: Failed to load required file'
+    puts "ERROR: #{boom}"
     exit 1
 end
 
@@ -51,7 +53,7 @@ loglevel = :fatal
 interactive = false
 source = {:user => nil, :pass => nil, :host => nil, :port => nil, :mbox => nil, :secure => false}
 dest = {:user => nil, :pass => nil, :host => nil, :port => nil, :mbox => nil, :secure => false}
-
+$DEBUG = true
 opts.each do |opt,arg|
     case opt
         when '--help'

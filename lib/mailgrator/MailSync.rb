@@ -106,7 +106,7 @@ module MailGrator
                 rescue MessageDuplicate => boom
                     Logger.warn("Duplicate message found in #{mailbox} with ID: #{boom.message_id}")
                 rescue EOFError
-                    Logger.info("Reached end of file for mailbox: #{mailbox}"
+                    Logger.info("Reached end of file for mailbox: #{mailbox}")
                     run = false
                 rescue IsDirectoryError => boom
                     Logger.warn("No messages. File is a directory: #{boom.path}")

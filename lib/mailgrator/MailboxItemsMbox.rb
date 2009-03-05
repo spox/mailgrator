@@ -51,7 +51,7 @@ module MailGrator
         def fetch_IDs
             @ID_thread = Thread.new do
                 if(File.directory?(@full_path))
-                    Logger.info("Fetch IDs requestd on directory instead of file. Returning empty set. (#{@full_path})"
+                    Logger.info("Fetch IDs requestd on directory instead of file. Returning empty set. (#{@full_path})")
                 else
                     begin
                         while(line = @file.readline) do
