@@ -18,6 +18,8 @@ module MailGrator
             @secure = secure
             if(port.nil?)
                 @port = secure ? 993 : 143
+            else
+                @port = port
             end
             @lock = Mutex.new
             connect
@@ -84,7 +86,7 @@ module MailGrator
         def connect
             Logger.info("Attempting connection to IMAP server: #{@server}:#{@port}")
             begin
-                @connection = Net::IMAP.new(@server, @port, @secure)
+                @connection = Net::IMAP.new(@server, {:port => @port}, @secure)
                 Logger.info('Connection to server has been established')
                 authenticate
             rescue Object => boom
