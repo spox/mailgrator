@@ -2,6 +2,9 @@ module MailGrator
     class GratorException < Exception
     end
     
+    class EOFolder < GratorException
+    end
+    
     class MessageDuplicate < GratorException
         attr_reader :message_id
         def initialize(m_id)

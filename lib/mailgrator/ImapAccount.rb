@@ -12,7 +12,7 @@ module MailGrator
         # Creates a new ImapAccount
         def initialize(server, username, password, port=143, secure=false)
             @connection = MailConnection.new(server, username, password, port, secure)
-            @mailbox_list.build_mailboxes
+            @mailbox_list = build_mailboxes
         end
 
         private

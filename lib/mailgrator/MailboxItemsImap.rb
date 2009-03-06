@@ -1,4 +1,5 @@
 ['Exceptions', 'Logger'].each{|f| require "mailgrator/#{f}"}
+require 'net/imap'
 module MailGrator
     class MailboxItemsImap
 
@@ -13,11 +14,30 @@ module MailGrator
             @message_ids = Array.new
             @ID_complete = false
             @ID_thread = nil
+            @skip_messages = []
+            @last_message = 0
             Logger.info("Checking mailbox #{mailbox}")
             unless(@connection.current_mailbox == @mailbox.gsub('/', @delim))
-                @connection.change_mailbox(@mailbox.gsub('/', @delim), true)
+                @connection.change_mailbox(@mailbox.gsub('/', @delim))
             end
             fetch_IDs
+        end
+
+        def skip_messages(msg_ids)
+            @skip_messages = msg_ids
+        end
+        
+        def fetch_next_message
+            raise EOFolder.new if @message_ids.empty? || @last_message >= @message_ids.size
+            begin
+                msg_id = @message_ids[@last_message]
+                @last_message += 1
+                raise DuplicateMessage.new(msg_id) if @skip_messages.include?(msg_id)
+                return fetch_msgid(msg_id)
+            rescue MessageDuplicate => boom
+                Logger.warn("Duplicate message found: #{boom.message_id}. Skipping")
+                retry
+            end
         end
 
         # Wait for ID fetcher thread to complete
@@ -34,14 +54,17 @@ module MailGrator
         # id:: message ID
         # Fetch message with given ID
         def fetch_msgid(id)
+            Logger.info("Message id to fetch: #{id}")
             raise InvalidMessageID.new(id) unless @message_ids.include?(id)
-            return fetch_message_seqno(@message_ids.index(id))
+            return fetch_message_seqno(@message_ids.index(id) + 1)
         end
 
         # num:: index message is located at
         # Fetch message at given index
         def fetch_message_seqno(num)
-            return @connection.imap.fetch(num, 'BODY')
+            Logger.info("Message sequence number: #{num}")
+            @connection.change_mailbox(@mailbox.gsub('/', @delim))
+            return @connection.imap.fetch(num, 'RFC822')[0][1]['RFC822']
         end
 
         # message:: full email message
@@ -53,14 +76,21 @@ module MailGrator
         private
 
         def fetch_IDs
-            Logger.info("Fetching message-ids for #{mailbox}")
+            Logger.info("Fetching message-ids for #{@mailbox}")
             @ID_thread = Thread.new do
-                @connection.imap.fetch(1..-1, 'ENVELOPE').each do |id|
-                    @message_ids << id.attr['ENVELOPE'][:message_id]
-                    Logger.info("Fetched message: #{id.attr['ENVELOPE'][:message_id]}")
+                begin
+                    msgs = @connection.imap.fetch(1..-1, 'ENVELOPE')
+                    unless(msgs.nil?)
+                        msgs.each do |id|
+                            @message_ids << id.attr['ENVELOPE'][:message_id]
+                            Logger.info("Fetched message: #{id.attr['ENVELOPE'][:message_id]}")
+                        end
+                        Logger.info("Fetched #{@message_ids.size} message UIDs from #{@mailbox}")
+                    end
+                    @ID_complete = true
+                rescue Net::IMAP::ResponseParseError => boom
+                    Logger.fatal("Failed to fetch mailbox list (#{@mailbox}). #{boom}")
                 end
-                Logger.info("Fetched #{@message_ids.size} message UIDs from #{@mailbox}")
-                @ID_complete = true
             end
         end
     end

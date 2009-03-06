@@ -5,7 +5,7 @@ module MailGrator
     class MailSync
         # max_threads:: max number of threads to create
         # Creates new MailSync
-        def initialize(max_threads=10)
+        def initialize(max_threads=1)
             @src_account = nil
             @dest_account = nil
             @max_threads = max_threads > 0 ? max_threads : 1
@@ -37,12 +37,12 @@ module MailGrator
             @threads = Array.new
             missing_folders = @dest_account.mailbox_list.missing(@src_account.mailbox_list.list)
             @dest_account.mailbox_list.add_mailboxes(missing_folders)
-            @src_account.mailbox_list.list.sort do |mailbox|
+            @src_account.mailbox_list.list.sort.each do |mailbox|
                 @proc_queue << lambda do
                     begin
                         sync(mailbox)
                     rescue Object => boom
-                        Logger.warn("Unexpected error while syncing #{mailbox}: #{boom}")
+                        Logger.warn("Unexpected error while syncing #{mailbox}: #{boom}\n#{boom.backtrace.join("\n")}")
                     end
                 end
             end
@@ -71,12 +71,12 @@ module MailGrator
         end
 
         def notify_completion
-            @threads.delete(Thread.self)
+            @threads.delete(Thread.current)
             dead_threads = []
             @threads.each{|t| dead_threads.push(t) unless t.alive?}
             if(@threads.size < 1)
                 @lock.synchronize do
-                    @stopper.wakeup
+                    @stopper.signal
                 end
             end
         end
@@ -85,11 +85,14 @@ module MailGrator
             @max_threads.times do
                 @threads << Thread.new do
                     cur_proc = get_next_proc
-                    until(proc.nil?) do
-                        cur_proc.pop.run
+                    until(cur_proc.nil?) do
+                        Logger.info("Thread #{Thread.current} starting proc: #{cur_proc}")
+                        cur_proc.call
+                        Logger.info("Thread #{Thread.current} completed proc: #{cur_proc}")
                         cur_proc = get_next_proc
                     end
                     notify_completion
+                    Logger.info("Thread has reached completion: #{Thread.current}")
                 end
             end
         end
@@ -108,7 +111,10 @@ module MailGrator
                 rescue EOFError
                     Logger.info("Reached end of file for mailbox: #{mailbox}")
                     run = false
-                rescue IsDirectoryError => boom
+                rescue EOFolder
+                    Logger.info("Reached end of file for mailbox: #{mailbox}")
+                    run = false
+                rescue IsDirectory => boom
                     Logger.warn("No messages. File is a directory: #{boom.path}")
                     run = false
                 end

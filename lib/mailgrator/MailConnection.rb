@@ -43,15 +43,28 @@ module MailGrator
         def change_mailbox(box, read_only=false)
             @current_box = box
             @read_only = read_only
-            if(read_only)
-                begin
-                    @connection.examine(box)
-                rescue Net::IMAP::BadResponseError
-                    Logger.warn("Read-only connection to #{box} failed. Connecting directly")
-                    @connection.select(box)
+            first = true
+            begin
+                if(read_only)
+                    begin
+                        imap.examine(box)
+                    rescue Net::IMAP::BadResponseError
+                        Logger.warn("Read-only connection to #{box} failed. Connecting directly")
+                        imap.select(box)
+                    end
+                else
+                    imap.select(box)
                 end
-            else
-                @connection.select(box)
+            rescue IOError => boom
+                if(first)
+                    Logger.warn("Change mailbox failed. Attempting a reconnect and retrying mailbox")
+                    first = false
+                    reconnect
+                    retry
+                else
+                    Logger.fatal("Failed to change mailbox. Connection error assumed: #{boom}")
+                    raise boom
+                end
             end
         end
 
@@ -59,8 +72,9 @@ module MailGrator
         # message:: message to add to mailbox
         # adds message to given mailbox
         def append_message(mailbox, message)
-            raise ReadOnlyMailbox.new(mailbox) if @read_only
+            #raise ReadOnlyMailbox.new(mailbox) if @read_only
             @lock.synchronize do
+
                 begin
                     date = Time.now
                     if(message =~ /^(From - ... ... .+?[0-9]{4}\n)/)
@@ -73,7 +87,7 @@ module MailGrator
                             date = Time.now
                         end
                     end
-                    @connection.append(mailbox, message, [:SEEN], date)
+                    imap.append(mailbox, message, [:SEEN], date)
                     Logger.info("New message added to #{mailbox}")
                 rescue Object => boom
                     Logger.warn("Failed to transer message to #{mailbox}: #{boom}")
@@ -114,18 +128,24 @@ module MailGrator
             if(!@secure && !@authed)
                 begin
                     Logger.info('Attempting direct authentication')
-                    @connection.login('login', @username, @password)
+                    @connection.login(@username, @password)
                     authed = true
                 rescue
                     Logger.warn('Authentication failed using direct login')
                 end
             end
-            raise ConnectionFailed.new("Failed to authenticate") unless @authed
+            raise ConnectionFailed.new("Failed to authenticate") unless authed
             Logger.info("Successful authentication to: #{@server}:#{@port}")
         end
 
         def reconnect
-            return unless @connection.nil? && @connection.disconnect?
+            unless(@connection.nil?)
+                begin
+                    @connection.close
+                rescue Object => boom
+                    Logger.warn("Connection threw an error on closing: #{boom}")
+                end
+            end
             connect
             change_mailbox(@current_box, @read_only) unless @current_box.nil?
         end

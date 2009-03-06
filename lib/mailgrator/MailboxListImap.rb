@@ -1,4 +1,5 @@
 ['Exceptions', 'MailConnection', 'MailboxItemsImap', 'Logger'].each{|f| require "mailgrator/#{f}"}
+require 'net/imap'
 module MailGrator
     class MailboxListImap
         # connection:: IMAP MailConnection
@@ -57,7 +58,7 @@ module MailGrator
         # list:: mailbox list
         # adds list of mailboxes
         def add_mailboxes(list)
-            raise InvalidType.new(Array, list.class) unless clist.is_a?(Array)
+            raise InvalidType.new(Array, list.class) unless list.is_a?(Array)
             list.uniq!
             list.sort!
             failures = Array.new
@@ -81,10 +82,14 @@ module MailGrator
         def build_list
             list = @connection.imap.list('', '*')
             list.each do |item|
-                @delim = item[:delim]
-                if !@list.has_key?(item[:name].gsub(item[:delim], '/')) || !@list[item[:name].gsub(item[:delim], '/')].is_a?(MailboxItemsImap)
-                    @list[item[:name].gsub(item[:delim], '/')] = MailboxItemsImap.new(@connection, item[:name].gsub(item[:delim], '/'), item[:delim])
-                    @list[item[:name].gsub(item[:delim], '/')].id_wait_complete
+                begin
+                    @delim = item[:delim]
+                    if !@list.has_key?(item[:name].gsub(item[:delim], '/')) || !@list[item[:name].gsub(item[:delim], '/')].is_a?(MailboxItemsImap)
+                        @list[item[:name].gsub(item[:delim], '/')] = MailboxItemsImap.new(@connection, item[:name].gsub(item[:delim], '/'), item[:delim])
+                        @list[item[:name].gsub(item[:delim], '/')].id_wait_complete
+                    end
+                rescue Net::IMAP::NoResponseError => boom
+                    Logger.warn("Mailbox build gave error (#{item[:name].gsub(item[:delim], '/')}): #{boom}")
                 end
             end
         end
