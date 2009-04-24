@@ -10,15 +10,16 @@ module MailGrator
         # port:: port the server is listening on
         # secure:: use a secure connection
         # Creates a new ImapAccount
-        def initialize(server, username, password, port=143, secure=false)
+        def initialize(pool, server, username, password, port=143, secure=false)
             @connection = MailConnection.new(server, username, password, port, secure)
+            @pool = pool
             @mailbox_list = build_mailboxes
         end
 
         private
 
         def build_mailboxes
-            return MailboxListImap.new(@connection)
+            return MailboxListImap.new(@connection, @pool)
         end
     end
 end

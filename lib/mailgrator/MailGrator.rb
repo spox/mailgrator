@@ -1,4 +1,6 @@
 ['MailSync', 'MboxAccount', 'ImapAccount', 'Exceptions'].each{|f| require "mailgrator/#{f}"}
+require 'actionpool'
+
 module MailGrator
 
     class MailGrator
@@ -13,6 +15,7 @@ module MailGrator
             @dest_acct = nil
             @src_acct = nil
             @sync = nil
+            @pool = ActionPool::Pool.new(1, 4)
         end
 
         # starts the program
@@ -26,29 +29,17 @@ module MailGrator
         private
 
         def show_status
-            until(@sync.progress == 1)
+            until(@sync.progress == 0)
                 puts "#{@sync.progress * 100}%"
                 sleep(1)
             end
         end
 
-        def start_questions
-            raise "Not Implemented"
-        end
-
         def start_sync
-            @sync = MailSync.new
+            @sync = MailSync.new(@pool)
             setup_accounts
-            t1 = Thread.new do
-                @sync.dest_account = @dest_acct
-                Logger.info("Destination acccount connected and ready")
-            end
-            t2 = Thread.new do
-                @sync.src_account = @src_acct
-                Logger.info("Source account connected and ready")
-            end
-            t1.join
-            t2.join
+            @sync.dest_account = @dest_acct
+            @sync.src_account = @src_acct
             @sync.sync_mail
             show_status
         end
@@ -57,12 +48,12 @@ module MailGrator
             unless(@dest[:mbox].nil?)
                 @dest_acct = MboxAccount.new(@dest[:mbox])
             else
-                @dest_acct = ImapAccount.new(@dest[:host], @dest[:user], @dest[:pass], @dest[:port], @dest[:secure])
+                @dest_acct = ImapAccount.new(@pool, @dest[:host], @dest[:user], @dest[:pass], @dest[:port], @dest[:secure])
             end
             unless(@src[:mbox].nil?)
                 @src_acct = MboxAccount.new(@src[:mbox])
             else
-                @src_acct = ImapAccount.new(@src[:host], @src[:user], @src[:pass], @src[:port], @src[:secure])
+                @src_acct = ImapAccount.new(@pool, @src[:host], @src[:user], @src[:pass], @src[:port], @src[:secure])
             end
             if(@dest_acct.is_a?(MboxAccount))
                 raise InvalidMigration.new(@src_acct.class, @dest_acct.class)

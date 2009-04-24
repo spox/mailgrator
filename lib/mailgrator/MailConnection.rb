@@ -71,13 +71,12 @@ module MailGrator
         # mailbox:: destination mailbox for message
         # message:: message to add to mailbox
         # adds message to given mailbox
-        def append_message(mailbox, message)
+        def append_message(mailbox, message, flags, date=nil)
             #raise ReadOnlyMailbox.new(mailbox) if @read_only
             @lock.synchronize do
 
                 begin
-                    date = Time.now
-                    if(message =~ /^(From - ... ... .+?[0-9]{4}\n)/)
+                    if(message =~ /^(From - ... ... .+?[0-9]{4}\n)/ && date.nil?)
                         timestr = $1
                         message.gsub(/^#{timestr}/, '')
                         timestr.chomp
@@ -87,7 +86,7 @@ module MailGrator
                             date = Time.now
                         end
                     end
-                    imap.append(mailbox, message, [:SEEN], date)
+                    imap.append(mailbox, message, flags, date)
                     Logger.info("New message added to #{mailbox}")
                 rescue Object => boom
                     Logger.warn("Failed to transer message to #{mailbox}: #{boom}")

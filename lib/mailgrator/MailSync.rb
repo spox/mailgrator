@@ -1,20 +1,15 @@
 ['MailAccount', 'Exceptions', 'Logger'].each{|f|require "mailgrator/#{f}"}
-require 'thread'
 
 module MailGrator
     class MailSync
         # max_threads:: max number of threads to create
         # Creates new MailSync
-        def initialize(max_threads=1)
+        def initialize(pool)
+            @pool = pool
             @src_account = nil
             @dest_account = nil
-            @max_threads = max_threads > 0 ? max_threads : 1
-            @threads = []
-            @proc_queue = Queue.new
-            @stopper = ConditionVariable.new
-            @lock = Mutex.new
-            @pop_lock = Mutex.new
             @initial_size = 0
+            @procs_queue = []
         end
 
         # account:: MailAccount
@@ -34,11 +29,10 @@ module MailGrator
         # synchronize mail from source to destination account
         def sync_mail
             raise EmptyAccounts.new(@src_account, @dest_account) if @src_account.nil? || @dest_account.nil?
-            @threads = Array.new
             missing_folders = @dest_account.mailbox_list.missing(@src_account.mailbox_list.list)
             @dest_account.mailbox_list.add_mailboxes(missing_folders)
             @src_account.mailbox_list.list.sort.each do |mailbox|
-                @proc_queue << lambda do
+                @procs_queue << Proc.new do
                     begin
                         sync(mailbox)
                     rescue Object => boom
@@ -46,56 +40,16 @@ module MailGrator
                     end
                 end
             end
-            @initial_size = @proc_queue.size
-            start_threads
-            wait_for_completion
+            @initial_size = @procs_queue.size
+            @procs_queue.size.times{ @pool.process{ @procs_queue.shift.call }}
         end
 
         # return percentage of tasks completed
         def progress
-            return @proc_queue.size / @initial_size.to_f
+            return @procs_queue.size / @initial_size.to_f
         end
 
         private
-
-        def get_next_proc
-            @pop_lock.synchronize do
-                return @proc_queue.empty? ? nil : @proc_queue.pop
-            end
-        end
-
-        def wait_for_completion
-            @lock.synchronize do
-                @stopper.wait(@lock)
-            end
-        end
-
-        def notify_completion
-            @threads.delete(Thread.current)
-            dead_threads = []
-            @threads.each{|t| dead_threads.push(t) unless t.alive?}
-            if(@threads.size < 1)
-                @lock.synchronize do
-                    @stopper.signal
-                end
-            end
-        end
-
-        def start_threads
-            @max_threads.times do
-                @threads << Thread.new do
-                    cur_proc = get_next_proc
-                    until(cur_proc.nil?) do
-                        Logger.info("Thread #{Thread.current} starting proc: #{cur_proc}")
-                        cur_proc.call
-                        Logger.info("Thread #{Thread.current} completed proc: #{cur_proc}")
-                        cur_proc = get_next_proc
-                    end
-                    notify_completion
-                    Logger.info("Thread has reached completion: #{Thread.current}")
-                end
-            end
-        end
 
         def sync(mailbox)
             source_items = @src_account.mailbox_list.items(mailbox)
@@ -104,8 +58,12 @@ module MailGrator
             run = true
             while(run)
                 begin
-                    message = source_items.fetch_next_message
-                    dest_items.add_message(message)
+                    message, flags, date = source_items.fetch_next_message
+                    if(message.nil?)
+                        Logger.warn("Message was nil!")
+                        next
+                    end
+                    dest_items.add_message(message, flags, date)
                 rescue MessageDuplicate => boom
                     Logger.warn("Duplicate message found in #{mailbox} with ID: #{boom.message_id}")
                 rescue EOFError

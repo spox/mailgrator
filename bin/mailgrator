@@ -48,12 +48,11 @@ opts = GetoptLong.new(
     ['--version', '-v', GetoptLong::NO_ARGUMENT]
 )
 verbose = 0
-logto = nil
-loglevel = :fatal
+logto = $stdout
+loglevel = :info
 interactive = false
 source = {:user => nil, :pass => nil, :host => nil, :port => nil, :mbox => nil, :secure => false}
 dest = {:user => nil, :pass => nil, :host => nil, :port => nil, :mbox => nil, :secure => false}
-$DEBUG = true
 opts.each do |opt,arg|
     case opt
         when '--help'

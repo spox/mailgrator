@@ -4,11 +4,12 @@ module MailGrator
     class MailboxListImap
         # connection:: IMAP MailConnection
         # Creates new MailboxListImap
-        def initialize(connection)
+        def initialize(connection, pool)
             raise InvalidType.new(MailConnection, connection.class) unless connection.is_a?(MailConnection)
             @connection = connection
             @list = Hash.new
             @delim = nil
+            @pool = pool
             build_list
         end
 
@@ -85,8 +86,8 @@ module MailGrator
                 begin
                     @delim = item[:delim]
                     if !@list.has_key?(item[:name].gsub(item[:delim], '/')) || !@list[item[:name].gsub(item[:delim], '/')].is_a?(MailboxItemsImap)
-                        @list[item[:name].gsub(item[:delim], '/')] = MailboxItemsImap.new(@connection, item[:name].gsub(item[:delim], '/'), item[:delim])
-                        @list[item[:name].gsub(item[:delim], '/')].id_wait_complete
+                        @list[item[:name].gsub(item[:delim], '/')] = MailboxItemsImap.new(@connection, item[:name].gsub(item[:delim], '/'), item[:delim], @pool)
+        #                @list[item[:name].gsub(item[:delim], '/')].id_wait_complete
                     end
                 rescue Net::IMAP::NoResponseError => boom
                     Logger.warn("Mailbox build gave error (#{item[:name].gsub(item[:delim], '/')}): #{boom}")

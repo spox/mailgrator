@@ -11,6 +11,7 @@ spec = Gem::Specification.new do |s|
   s.files             = Dir['**/*']
   s.executables = %w(mailgrator)
   s.require_paths = %w(lib)
+  s.add_dependency('ActionPool')
   s.homepage          = %q(http://github.com/spox/mailgrator/tree)
   description         = []
   File.open("README") do |file|
